@@ -178,6 +178,20 @@ photoLibrary.getThumbnail = function (photoIdOrLibraryItem, success, error, opti
 
 };
 
+photoLibrary.getNativeThumbnailUrl = function (photoIdOrLibraryItem, success, error, options) {
+
+  var photoId = typeof photoIdOrLibraryItem.id !== 'undefined' ? photoIdOrLibraryItem.id : photoIdOrLibraryItem;
+  options = getThumbnailOptionsWithDefaults(options);
+
+  cordova.exec(
+    success,
+    error,
+    'PhotoLibrary',
+    'getNativeThumbnailUrl', [photoId, options]
+  );
+
+};
+
 photoLibrary.getPhoto = function (photoIdOrLibraryItem, success, error, options) {
 
   var photoId = typeof photoIdOrLibraryItem.id !== 'undefined' ? photoIdOrLibraryItem.id : photoIdOrLibraryItem;
@@ -194,6 +208,30 @@ photoLibrary.getPhoto = function (photoIdOrLibraryItem, success, error, options)
     error,
     'PhotoLibrary',
     'getPhoto', [photoId, options]
+  );
+
+};
+
+photoLibrary.getNativePhotoUrl = function (photoIdOrLibraryItem, success, error) {
+
+  var photoId = typeof photoIdOrLibraryItem.id !== 'undefined' ? photoIdOrLibraryItem.id : photoIdOrLibraryItem;
+
+  cordova.exec(
+    success,
+    error,
+    'PhotoLibrary',
+    'getNativePhotoUrl', [photoId]
+  );
+
+};
+
+photoLibrary.purgeNativeFileCache = function (success, error) {
+
+  cordova.exec(
+    success,
+    error,
+    'PhotoLibrary',
+    'purgeNativeFileCache'
   );
 
 };
