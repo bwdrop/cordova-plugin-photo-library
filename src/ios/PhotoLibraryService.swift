@@ -357,23 +357,9 @@ final class PhotoLibraryService {
                     return
                 }
 
-                var imageDataWrapper: PictureData?
+                let imageData = PhotoLibraryService.image2PictureData(image, quality: 1.0, originalData: imageData)
 
-                let data = imageData!
-                var mimeType: String?
-
-                if (PhotoLibraryService.imageHasAlpha(image)){
-                    mimeType = "image/png"
-                } else {
-                    mimeType = "image/jpeg"
-                }
-
-                if mimeType != nil {
-                    imageDataWrapper = PictureData(data: data, mimeType: mimeType!)
-                }
-
-
-                completion(imageDataWrapper)
+                completion(imageData)
             }
         })
     }
@@ -735,6 +721,29 @@ final class PhotoLibraryService {
 
         if data != nil && mimeType != nil {
             return PictureData(data: data!, mimeType: mimeType!)
+        }
+        return nil
+    }
+
+    fileprivate static func image2PictureData(_ image: UIImage, quality: Float, originalData: Data?) -> PictureData? {
+        //        This returns raw data, but mime type is unknown. Anyway, crodova performs base64 for messageAsArrayBuffer, so there's no performance gain visible
+        //        let provider: CGDataProvider = CGImageGetDataProvider(image.CGImage)!
+        //        let data = CGDataProviderCopyData(provider)
+        //        return data;
+
+        var data: Data?
+        var mimeType: String?
+
+        if (imageHasAlpha(image)){
+            data = UIImagePNGRepresentation(image)
+            mimeType = data != nil ? "image/png" : nil
+        } else {
+            data = UIImageJPEGRepresentation(image, CGFloat(quality))
+            mimeType = data != nil ? "image/jpeg" : nil
+        }
+
+        if data != nil && mimeType != nil {
+            return PictureData(data: originalData!, mimeType: mimeType!)
         }
         return nil
     }
