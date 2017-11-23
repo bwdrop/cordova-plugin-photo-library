@@ -198,18 +198,16 @@ photoLibrary.getPhoto = function (photoIdOrLibraryItem, success, error, options)
 
 };
 
-photoLibrary.modifyPhoto = function (photoIdOrLibraryItem, success, error, base64Data) {
+photoLibrary.deletePhoto = function (photoURL, success, error) {
 
-    var photoId = typeof photoIdOrLibraryItem.id !== 'undefined' ? photoIdOrLibraryItem.id : photoIdOrLibraryItem;
+  cordova.exec(
+    success,
+    error,
+    'PhotoLibrary',
+    'deletePhoto', [photoURL]
+  );
 
-    cordova.exec(
-      success,
-      error,
-      'PhotoLibrary',
-      'modifyPhoto', [photoId, base64Data]
-    );
-
-}
+};
 
 photoLibrary.getLibraryItem = function (libraryItem, success, error, options) {
 
