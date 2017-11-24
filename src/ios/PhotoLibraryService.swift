@@ -134,7 +134,7 @@ final class PhotoLibraryService {
 
 
 
-	// TODO: do not restart caching on multiple calls
+        // TODO: do not restart caching on multiple calls
 //        if fetchResult.count > 0 {
 //
 //            var assets = [PHAsset]()
@@ -335,6 +335,20 @@ final class PhotoLibraryService {
 
     }
 
+    func deletePhoto(_ assetURL: URL, completion: @escaping (_ result: String?) -> Void) {
+
+        PHPhotoLibrary.shared().performChanges({
+            let imageAssetToDelete = PHAsset.fetchAssets(withALAssetURLs:[assetURL], options: nil)
+            PHAssetChangeRequest.deleteAssets(imageAssetToDelete)
+        }, completionHandler: { success, error in
+            if let er = error {
+                completion(nil)
+            } else {
+                completion("success")
+            }
+        })
+    }
+
     func getPhoto(_ photoId: String, completion: @escaping (_ result: PictureData?) -> Void) {
 
         let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [photoId], options: self.fetchOptions)
@@ -363,6 +377,7 @@ final class PhotoLibraryService {
             }
         })
     }
+
 
     func getLibraryItem(_ itemId: String, mimeType: String, completion: @escaping (_ base64: String?) -> Void) {
         let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: [itemId], options: self.fetchOptions)

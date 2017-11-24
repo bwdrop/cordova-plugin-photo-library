@@ -32,7 +32,6 @@ import Foundation
 
             let options = command.arguments[0] as! NSDictionary
 
-
             let thumbnailWidth = options["thumbnailWidth"] as! Int
             let thumbnailHeight = options["thumbnailHeight"] as! Int
             let itemsInChunk = options["itemsInChunk"] as! Int
@@ -93,14 +92,12 @@ import Foundation
         }
     }
 
-
     func isAuthorized(_ command: CDVInvokedUrlCommand) {
         concurrentQueue.async {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: PhotoLibraryService.hasPermission())
             self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
         }
     }
-
 
     func getThumbnail(_ command: CDVInvokedUrlCommand) {
         concurrentQueue.async {
@@ -137,6 +134,31 @@ import Foundation
         }
     }
 
+    func deletePhoto(_ command: CDVInvokedUrlCommand) {
+        concurrentQueue.async {
+
+            if !PhotoLibraryService.hasPermission() {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: PhotoLibraryService.PERMISSION_ERROR)
+                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
+                return
+            }
+
+            let service = PhotoLibraryService.instance
+
+            let photoURLString = command.arguments[0] as! String
+            let photoURL = URL(string: photoURLString)
+
+            service.deletePhoto(photoURL!) { (result) in
+
+                var pluginResult = CDVPluginResult(status: CDVCommandStatus_OK)
+                if (result == nil) {
+                    pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR)
+                }
+                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId )
+            }
+        }
+    }
+
     func getPhoto(_ command: CDVInvokedUrlCommand) {
         concurrentQueue.async {
 
@@ -167,20 +189,6 @@ import Foundation
         }
     }
 
-    func modifyPhoto(_ command: CDVInvokedUrlCommand) {
-        concurrentQueue.async {
-
-            if !PhotoLibraryService.hasPermission() {
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: PhotoLibraryService.PERMISSION_ERROR)
-                self.commandDelegate!.send(pluginResult, callbackId: command.callbackId)
-                return
-            }
-
-            let photoId = command.arguments[0] as! String
-            let base64Data = command.arguments[1] as! String
-        }
-    }
-
     func getLibraryItem(_ command: CDVInvokedUrlCommand) {
         concurrentQueue.async {
 
@@ -199,7 +207,6 @@ import Foundation
         }
     }
 
-
     func returnPictureData(callbackId : String, base64: String?, mimeType: String?) {
         let pluginResult = (base64 != nil) ?
             CDVPluginResult(
@@ -213,7 +220,6 @@ import Foundation
         self.commandDelegate!.send(pluginResult, callbackId: callbackId)
 
     }
-
 
     func stopCaching(_ command: CDVInvokedUrlCommand) {
 
