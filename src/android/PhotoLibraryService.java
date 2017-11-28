@@ -193,6 +193,16 @@ public class PhotoLibraryService {
 
   }
 
+  public void deletePhoto(final String url, final JSONObjectRunnable completion) throws RuntimeException {
+
+    File file = new File(url);
+
+    file.delete();
+
+    completion.run(new JSONObject());
+
+  }
+
   public void saveImage(final Context context, final CordovaInterface cordova, final String url, String album, final JSONObjectRunnable completion)
     throws IOException, URISyntaxException {
 

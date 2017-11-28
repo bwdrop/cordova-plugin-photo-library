@@ -31,6 +31,7 @@ public class PhotoLibrary extends CordovaPlugin {
   public static final String ACTION_GET_ALBUMS = "getAlbums";
   public static final String ACTION_GET_THUMBNAIL = "getThumbnail";
   public static final String ACTION_GET_PHOTO = "getPhoto";
+  public static final String ACTION_DELETE_PHOTO = "deletePhoto";
   public static final String ACTION_STOP_CACHING = "stopCaching";
   public static final String ACTION_REQUEST_AUTHORIZATION = "requestAuthorization";
   public static final String ACTION_SAVE_IMAGE = "saveImage";
@@ -159,6 +160,34 @@ public class PhotoLibrary extends CordovaPlugin {
 
               PhotoLibraryService.PictureData photo = service.getPhoto(getContext(), photoId);
               callbackContext.sendPluginResult(createMultipartPluginResult(PluginResult.Status.OK, photo));
+
+            } catch (Exception e) {
+              e.printStackTrace();
+              callbackContext.error(e.getMessage());
+            }
+          }
+        });
+        return true;
+
+      } else if (ACTION_DELETE_PHOTO.equals(action)) {
+
+        cordova.getThreadPool().execute(new Runnable() {
+          public void run() {
+            try {
+
+              final String photoUrl = args.getString(0);
+
+              if (!cordova.hasPermission(WRITE_EXTERNAL_STORAGE)) {
+                callbackContext.error(service.PERMISSION_ERROR);
+                return;
+              }
+
+              service.deletePhoto(photoUrl, new PhotoLibraryService.JSONObjectRunnable() {
+                @Override
+                public void run(JSONObject result) {
+                  callbackContext.success(result);
+                }
+              });
 
             } catch (Exception e) {
               e.printStackTrace();
