@@ -134,7 +134,7 @@ final class PhotoLibraryService {
 
 
 
-        // TODO: do not restart caching on multiple calls
+	// TODO: do not restart caching on multiple calls
 //        if fetchResult.count > 0 {
 //
 //            var assets = [PHAsset]()
@@ -152,6 +152,11 @@ final class PhotoLibraryService {
         var chunkNum = 0
 
         fetchResult.enumerateObjects({ (asset: PHAsset, index, stop) in
+
+            if (options.maxItems > 0 && index + 1 > options.maxItems) {
+                completion(chunk, chunkNum, true)
+                return
+            }
 
             let libraryItem = self.assetToLibraryItem(asset: asset, useOriginalFileNames: options.useOriginalFileNames, includeAlbumData: options.includeAlbumData)
 
@@ -264,6 +269,7 @@ final class PhotoLibraryService {
             libraryItem["latitude"] = location.coordinate.latitude
             libraryItem["longitude"] = location.coordinate.longitude
         }
+
 
         if includeAlbumData {
             // This is pretty slow, use only when needed
@@ -522,7 +528,7 @@ final class PhotoLibraryService {
         do {
             sourceData = try getDataFromURL(url)
         } catch {
-            completion(nil, "\(String(describing: error))")
+            completion(nil, "\(error)")
             return
         }
 
@@ -532,7 +538,7 @@ final class PhotoLibraryService {
             assetsLibrary.writeImageData(toSavedPhotosAlbum: sourceData, metadata: nil) { (assetUrl: URL?, error: Error?) in
 
                 if error != nil {
-                    completion(nil, "Could not write image to album: \(String(describing: error))")
+                    completion(nil, "Could not write image to album: \(error)")
                     return
                 }
 
@@ -578,7 +584,7 @@ final class PhotoLibraryService {
 
     }
 
-    func saveVideo(_ url: String, album: String, completion: @escaping (_ url: URL?, _ error: String?)->Void) { // TODO: should return library item
+    func saveVideo(_ url: String, album: String, completion: @escaping (_ libraryItem: NSDictionary?, _ error: String?)->Void) {
 
         guard let videoURL = URL(string: url) else {
             completion(nil, "Could not parse DataURL")
@@ -607,7 +613,7 @@ final class PhotoLibraryService {
             assetsLibrary.writeVideoAtPath(toSavedPhotosAlbum: videoURL) { (assetUrl: URL?, error: Error?) in
 
                 if error != nil {
-                    completion(nil, "Could not write video to album: \(String(describing: error))")
+                    completion(nil, "Could not write video to album: \(error)")
                     return
                 }
 
@@ -617,10 +623,20 @@ final class PhotoLibraryService {
                 }
 
                 self.putMediaToAlbum(assetsLibrary, url: assetUrl, album: album, completion: { (error) in
+
+
                     if error != nil {
                         completion(nil, error)
                     } else {
-                        completion(assetUrl, nil)
+                        let fetchResult = PHAsset.fetchAssets(withALAssetURLs: [assetUrl], options: nil)
+                        var libraryItem: NSDictionary? = nil
+                        if fetchResult.count == 1 {
+                            let asset = fetchResult.firstObject
+                            if let asset = asset {
+                                libraryItem = self.assetToLibraryItem(asset: asset, useOriginalFileNames: false, includeAlbumData: true)
+                            }
+                        }
+                        completion(libraryItem, nil)
                     }
                 })
             }
@@ -667,7 +683,7 @@ final class PhotoLibraryService {
             guard let match = self.dataURLPattern.firstMatch(in: url, options: NSRegularExpression.MatchingOptions(rawValue: 0), range: NSMakeRange(0, url.characters.count)) else { // TODO: firstMatchInString seems to be slow for unknown reason
                 throw PhotoLibraryError.error(description: "The dataURL could not be parsed")
             }
-            let dataPos = match.rangeAt(0).length
+            let dataPos = match.range(at: 0).length
             let base64 = (url as NSString).substring(from: dataPos)
             guard let decoded = Data(base64Encoded: base64, options: NSData.Base64DecodingOptions(rawValue: 0)) else {
                 throw PhotoLibraryError.error(description: "The dataURL could not be decoded")
@@ -701,7 +717,7 @@ final class PhotoLibraryService {
             PhotoLibraryService.getAlPhotoAlbum(assetsLibrary, album: album, completion: { (alPhotoAlbum: ALAssetsGroup?, error: String?) in
 
                 if error != nil {
-                    completion("getting photo album caused error: \(String(describing: error))")
+                    completion("getting photo album caused error: \(error)")
                     return
                 }
 
@@ -711,7 +727,7 @@ final class PhotoLibraryService {
             })
 
         }, failureBlock: { (error: Error?) in
-            completion("Could not retrieve saved asset: \(String(describing: error))")
+            completion("Could not retrieve saved asset: \(error)")
         })
 
     }
@@ -807,7 +823,7 @@ final class PhotoLibraryService {
                 completion(photoAlbum, nil)
             }
             else {
-                completion(nil, "\(String(describing: error))")
+                completion(nil, "\(error)")
             }
         }
     }
